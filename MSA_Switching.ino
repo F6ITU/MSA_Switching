@@ -33,16 +33,17 @@ const char out1 = 3;
 
 // les entrées
 const char in1 = A0;
-
+// Transmission/Réflexion
 const char in2 = A1;
-
+// Forward/Reverse
 const char in3 = A2;
-
+// 1/2 GHz
 const char in4 = A3;
-
+// 2/3 GHz
 int in5 = A6;
-
+//msa/vna
 int in6 = A7;
+//attenuateur
 
 // variable de stockage de la valeur lue sur A6 et A7
 int att_val = 0;
@@ -53,13 +54,18 @@ boolean trans_refl;
 boolean fwd_reverse;
 boolean RFG1;
 boolean RFG2;
+int val_pot; // pour atténuateur
+byte Resistance;
+byte att;
+byte att_disp;
+
 //-----------------------------------------------------DEBUT DU SETUP-----------------------------------------------------------------------------------------------
 void setup()
 {
-//-----------------------------------FOR DEBUGGING ONLY------------------------------------------
-Serial.begin(9600); 
-Serial.println("My Sketch has started");
-//-----------------------------------FOR DEBUGGING ONLY------------------------------------------
+  //-----------------------------------FOR DEBUGGING ONLY------------------------------------------
+  Serial.begin(9600);
+  Serial.println("My Sketch has started");
+  //-----------------------------------FOR DEBUGGING ONLY------------------------------------------
 
   lcd.init(); // initialisation de l'afficheur
 
@@ -118,35 +124,7 @@ Serial.println("My Sketch has started");
   // dans le main, l'activation de la broche se fera par
   //ioport.digitalWrite(ED14, HIGH);
   // déclaration des sorties PCA9555 dans le même ordre que celui utilisé pour les entrées :
-  // TRANS=ED0, REFL=ED1, FWD=ED2, REV=ED3, G1=ED4,G2=ED5,MSA=ED6,VNA=ED7,10dB on=ED8,10dB off=ED9,40dB on=ED10,40dB off=ED11,20dB on=ED12,20dB off=ED13
-
-  //-----------atténuateur à 0 dB au démarrage-----------------------
-  // envoie 28 volts
-  digitalWrite(out6, HIGH);
-
-  ioport.digitalWrite(ED9, HIGH);
-  delay(100);
-  ioport.digitalWrite(ED9, LOW);
-  ioport.digitalWrite(ED10, HIGH);
-  delay(100);
-  ioport.digitalWrite(ED10, LOW);
-  ioport.digitalWrite(ED13, HIGH);
-  delay(100);
-  ioport.digitalWrite(ED13, LOW);
-  //coupure 28V
-  digitalWrite(out6, LOW);
-  // envoi de l'indication d'atténuation à l'afficheur
-  lcd.backlight();
-  // Envoi du message
-  //lcd.cursor_on();
-  //lcd.blink_on();
-  lcd.setCursor(0, 0);
-  lcd.print("Att.:");
-  lcd.setCursor(8, 0);
-  lcd.print("dB");
-  //Insertion de la valeur d'atténuation
-  lcd.setCursor(0, 6);
-  lcd.print("00");
+  // TRANS=ED0, REFL=ED1, FWD=ED2, REV=ED3, G1=ED4,G2=ED5,MSA=ED6,VNA=ED7,
 
   //--------------Vérification des autres états ---------------------
 
@@ -247,13 +225,13 @@ Serial.println("My Sketch has started");
 
 // Le programme teste l'état des entrées
 void loop()
-{
-  //--------------Mode MSA/VNA -----------------  
+{ lcd.backlight();
+  //--------------Mode MSA/VNA -----------------
   {
     msa_vna = analogRead(in6); //Rappel : in6 = A7 broche analogique
-//-----------------------------------FOR DEBUGGING ONLY------------------------------------------    
+    //-----------------------------------FOR DEBUGGING ONLY------------------------------------------
     Serial.println(msa_vna);
-//-----------------------------------FOR DEBUGGING ONLY------------------------------------------    
+    //-----------------------------------FOR DEBUGGING ONLY------------------------------------------
     if (msa_vna == 0)
     { lcd.setCursor(12, 0);
       //  lcd.print("Mode MSA");
@@ -267,7 +245,7 @@ void loop()
     }
     //VNA(); //Inter est à Vcc
   }
-    //--------------Mode TRANSMISSION-REFLEXION S21-S11 ----
+  //--------------Mode TRANSMISSION-REFLEXION S21-S11 ----
   {
     trans_refl = digitalRead(in1); //Rappel : in1 = A0
     if (trans_refl == HIGH)
@@ -282,7 +260,7 @@ void loop()
     //transmission(); //P4D5 est bas
   }
   //--------------Mode FWD-REVERSES11/S22 ou S12/S21 -----------------
-  //---- lire la valeur de trans_refl. 
+  //---- lire la valeur de trans_refl.
   //Si FWD et trans, alors==>S21
   //Si FWD et refl alors ==>S11
   //Si REV et trans alors ==>S12
@@ -300,8 +278,8 @@ void loop()
       lcd.print("Reverse :<----- S12");
     }
     // FWD(); //P4D4 est bas
- 
-   //--------------Mode 0-1, 1é et 2-3 GHz -------------
+
+    //--------------Mode 0-1, 1é et 2-3 GHz -------------
   }
   RFG1 = digitalRead(in3); //Rappel : in3 = A2
   RFG2 = digitalRead(in4); //Rappel : in4 = A3
@@ -330,22 +308,201 @@ void loop()
   { lcd.setCursor(0, 1);
     lcd.print("Bande : ERREUR      ");
   }
-  //--------------Mode Att 0-70dB -------------
-  
 
-  //- ajout de la commande de l'atténuateur (bouton ou potard ? )
-  // appel de la fonction 0 db à 70 dB ?
+  //------------------------------------------------------ATTENUATEUR
+  //10dB on=ED8, 40dB on=ED10, 20dB on=ED12,
+  //10dB off=ED9, 40dB off=ED11, 20dB off=ED13
+
+  //-----------atténuateur à 0 dB au démarrage-----------------------
+  // envoie 28 volts
+
+  Resistance = analogRead(val_pot);
+  // sélection des valeurs ed8 à ed13 selon val de "att"
 
 
-  // reste à créer les fonctions ci-dessus qui
-  // - vérifieront l'état de la variable attachée à la fonction.
-  // - Si identique, sortie, sinon :
-  // - enclancheront le step-up 28V pour exciter les relais
-  // - utiliseront la fonction milli() pour spécifier les temps de commutation des relais
-  // - modifieront l'affichage LCD en fonction de la valeur de l'état des entrées
-  // - commuteront la sortie du solénoïde du relais concerné durant 100ms
-  // - couperont l'arrivée du courant sur le step-up
-  // -
+  att = map(Resistance, 0, 1023, 0, 79);
+  //----------------atténuateur 0dB
+  if
+  (att <= 9)
+  {
+    att_disp = 00;
+    Serial.print("atténuateur 0dB");
+    Serial.println();
+    Serial.print("atténuateur");
+    Serial.println(att_disp);
+    digitalWrite(out6, HIGH);
+    ioport.digitalWrite(ED9, HIGH);
+    ioport.digitalWrite(ED11, HIGH);
+    ioport.digitalWrite(ED13, HIGH);
+    delay(100);
+    ioport.digitalWrite(ED9, LOW);
+    ioport.digitalWrite(ED11, LOW);
+    ioport.digitalWrite(ED13, LOW);
+    digitalWrite(out6, LOW);
+  }
+  //----------------atténuateur 10dB
+  else if
+  (att >= 10 && att <= 19)
+  {
+    att_disp = 10;
+    Serial.print("atténuateur 10dB");
+    Serial.println();
+    digitalWrite(out6, HIGH);
+    ioport.digitalWrite(ED8, HIGH);
+    ioport.digitalWrite(ED11, HIGH);
+    ioport.digitalWrite(ED13, HIGH);
+    delay(100);
+    ioport.digitalWrite(ED8, LOW);
+    ioport.digitalWrite(ED11, LOW);
+    ioport.digitalWrite(ED13, LOW);
+    digitalWrite(out6, LOW);
+    lcd.setCursor(0, 0);
+    lcd.print("Att.:");
+    lcd.setCursor(6, 0);
+    lcd.print(att_disp);
+    lcd.setCursor(8, 0);
+    lcd.print("dB");
+    //Insertion de la valeur d'atténuation
+
+  }
+  //----------------atténuateur 20dB
+  else if
+  (att >= 10 && att <= 99)
+  {
+    att_disp = 20;
+    Serial.print("atténuateur 20dB");
+    Serial.println();
+    digitalWrite(out6, HIGH);
+    ioport.digitalWrite(ED9, HIGH);
+    ioport.digitalWrite(ED11, HIGH);
+    ioport.digitalWrite(ED12, HIGH);
+    delay(100);
+    ioport.digitalWrite(ED9, LOW);
+    ioport.digitalWrite(ED11, LOW);
+    ioport.digitalWrite(ED12, LOW);
+    digitalWrite(out6, LOW);
+        lcd.setCursor(0, 0);
+    lcd.print("Att.:");
+    lcd.setCursor(6, 0);
+    lcd.print(att_disp);
+    lcd.setCursor(8, 0);
+    lcd.print("dB");
+    //Insertion de la valeur d'atténuation
+  }
+  //----------------atténuateur 30dB
+  else if
+  (att >= 30 && att <= 39)
+  {
+    att_disp = 30;
+    Serial.print("atténuateur 30dB");
+    Serial.println();
+    digitalWrite(out6, HIGH);
+    ioport.digitalWrite(ED8, HIGH);
+    ioport.digitalWrite(ED11, HIGH);
+    ioport.digitalWrite(ED12, HIGH);
+    delay(100);
+    ioport.digitalWrite(ED8, LOW);
+    ioport.digitalWrite(ED11, LOW);
+    ioport.digitalWrite(ED12, LOW);
+    digitalWrite(out6, LOW);
+        lcd.setCursor(0, 0);
+    lcd.print("Att.:");
+    lcd.setCursor(6, 0);
+    lcd.print(att_disp);
+    lcd.setCursor(8, 0);
+    lcd.print("dB");
+    //Insertion de la valeur d'atténuation
+  }
+  //----------------atténuateur 40dB
+  else if
+  (att >= 40 && att <= 49)
+  {
+    att_disp = 40;
+    Serial.print("atténuateur 40dB");
+    Serial.println();
+    digitalWrite(out6, HIGH);
+    ioport.digitalWrite(ED9, HIGH);
+    ioport.digitalWrite(ED10, HIGH);
+    ioport.digitalWrite(ED13, HIGH);
+    delay(100);
+    ioport.digitalWrite(ED9, LOW);
+    ioport.digitalWrite(ED10, LOW);
+    ioport.digitalWrite(ED13, LOW);
+    digitalWrite(out6, LOW);
+        lcd.setCursor(0, 0);
+    lcd.print("Att.:");
+    lcd.setCursor(6, 0);
+    lcd.print(att_disp);
+    lcd.setCursor(8, 0);
+    lcd.print("dB");
+    //Insertion de la valeur d'atténuation
+  }
+  //----------------atténuateur 50dB
+  else if
+  (att >= 50 && att <= 99)
+  {
+    att_disp = 50;
+    Serial.print("atténuateur 50dB");
+    Serial.println();
+    digitalWrite(out6, HIGH);
+    ioport.digitalWrite(ED8, HIGH);
+    ioport.digitalWrite(ED10, HIGH);
+    ioport.digitalWrite(ED13, HIGH);
+    delay(100);
+    ioport.digitalWrite(ED8, LOW);
+    ioport.digitalWrite(ED10, LOW);
+    ioport.digitalWrite(ED13, LOW);
+    digitalWrite(out6, LOW);
+        lcd.setCursor(0, 0);
+    lcd.print("Att.:");
+    lcd.setCursor(6, 0);
+    lcd.print(att_disp);
+    lcd.setCursor(8, 0);
+    lcd.print("dB");
+    //Insertion de la valeur d'atténuation
+  }
+  //----------------atténuateur 60dB
+  else if
+  (att >= 60 && att <= 69)
+  {
+    att_disp = 60;
+    Serial.print("atténuateur 60dB");
+    Serial.println();
+    digitalWrite(out6, HIGH);
+    ioport.digitalWrite(ED9, HIGH);
+    ioport.digitalWrite(ED10, HIGH);
+    ioport.digitalWrite(ED12, HIGH);
+    delay(100);
+    ioport.digitalWrite(ED9, LOW);
+    ioport.digitalWrite(ED10, LOW);
+    ioport.digitalWrite(ED12, LOW);
+    digitalWrite(out6, LOW);
+  }
+  //----------------atténuateur 70dB
+  else
+    (att >= 70 && att <= 79);
+  {
+    att_disp = 70;
+    Serial.print("atténuateur 70dB");
+    Serial.println();
+    digitalWrite(out6, HIGH);
+    ioport.digitalWrite(ED8, HIGH);
+    ioport.digitalWrite(ED10, HIGH);
+    ioport.digitalWrite(ED12, HIGH);
+    delay(100);
+    ioport.digitalWrite(ED8, LOW);
+    ioport.digitalWrite(ED10, LOW);
+    ioport.digitalWrite(ED12, LOW);
+    digitalWrite(out6, LOW);
+        lcd.setCursor(0, 0);
+    lcd.print("Att.:");
+    lcd.setCursor(6, 0);
+    lcd.print(att_disp);
+    lcd.setCursor(8, 0);
+    lcd.print("dB");
+    //Insertion de la valeur d'atténuation
+  }
+
 
 
 }
