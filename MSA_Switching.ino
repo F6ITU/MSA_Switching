@@ -41,9 +41,55 @@ boolean fwd_reverse;
 boolean RFG1;
 boolean RFG2;
 int val_pot; // pour atténuateur
-byte Resistance;
+unsigned int Resistance;
 byte att;
-byte att_disp;
+unsigned int att_disp;
+
+// dessin des crochets
+
+byte L1[8]={
+  B00000,
+  B00000,
+  B00000,
+  B11111,
+  B00001,
+  B00001,
+  B00001,
+  B00001
+};
+
+byte L2[8]={
+  B00001,
+  B00001,
+  B00001,
+  B11111,
+  B00000,
+  B00000,
+  B00000,
+  B00000
+};
+
+byte L3[8]={
+  B10000,
+  B10000,
+  B10000,
+  B11111,
+  B00000,
+  B00000,
+  B00000,
+  B00000
+};
+
+byte L4[8]={
+  B00000,
+  B00000,
+  B00000,
+  B11111,
+  B10000,
+  B10000,
+  B10000,
+  B10000
+};
 
 //-----------------------------------------------------DEBUT DU SETUP-----------------------------------------------------------------------------------------------
 void setup()
@@ -54,6 +100,12 @@ void setup()
   //-----------------------------------FOR DEBUGGING ONLY------------------------------------------
   lcd.init(); // initialisation de l'afficheur
   //MODULE P0WARDUINo gpio locales
+
+lcd.createChar(0, L1);
+lcd.createChar(1, L2);
+lcd.createChar(2, L3);
+lcd.createChar(3, L4);
+
   pinMode(out6, OUTPUT);
   //out6 va ouvrir un circuit 12V de mise en fonctionnement du step-up 28V, (via FET de puissance) et sera mis en service un peu avant
   //les déclanchements, puis désactivé immédiatement après pour éliminer tout risque de bruit de découpage durant la mesure
@@ -123,18 +175,31 @@ void loop()
 {
   lcd.backlight();
 
+  /*
+     dans un premier temps, je lance chaque fonction une à une. Chaque fonction retourne une valeur
+     STO_VNA
+     STO_ATT
+     STO_REFL
+     STO_GHz
+     Ces fonctions doivent donc être lancées depuis void Setup() puisqu'exécutées une seule fois
+     Ensuite, dans le main, je me contente de lire les entrées et vérifier si elle sont égales
+     a la valeur stockée. Si oui, on ignore et on boucle, si non, on appelle la fonction.
+  */
+
+  // effacement de la zone refl/fwd lorsque sur la position MSA
+  // faire un beep en cas de changement d'état
+
+
   //---------------------------MSA/VNA---------------------------------
   //input in5, output MSA=ED6, VNA=ED7,
 
   msa_vna = analogRead(in5); //Rappel : in5= A6 broche analogique
-  Serial.println(msa_vna);// debug
+
+
   if
   (msa_vna == 0)  // Inter est à Gnd
   { lcd.setCursor(0, 0);
     lcd.print("   SCALAR ANALYZER  ");
-
-    Serial.print("mode msa"); //debug
-    Serial.println(); //debug
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
     ioport.digitalWrite(ED6, HIGH); // = relais en position MSA collent
     delay(100); //100 ms de temps de collage des relais
@@ -142,11 +207,10 @@ void loop()
     ioport.digitalWrite(ED6, LOW);// replace le niveau logique du relais à zéro
   }
   else
+
   {
     lcd.setCursor(0, 0);
     lcd.print("   VECTOR ANALYZER  ");
-    Serial.print("mode msa"); //debug
-    Serial.println(); //debug
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
     ioport.digitalWrite(ED7, HIGH); //ED7 = relais en position VNA collent
     delay(100); //100 ms de temps de collage des relais
@@ -155,13 +219,13 @@ void loop()
   }
 
   //---------------------------TRANSMISSION/REFLEXION ---------------------------------
-  //input in1, output 
-  //                    TRANS=ED0, 
+  //input in1, output
+  //                    TRANS=ED0,
   //                    REFL=ED1,
   //P4 bit 5 TR VNA Selection, Transmission (0) or Reflection (1)
 
-  // Input in2 (A1) Output 
-  //                    FWD=ED2, 
+  // Input in2 (A1) Output
+  //                    FWD=ED2,
   //                    REV=ED3
   //P4 bit 4 DUT Direction, Forward (0) or Reverse (1)
   /*
@@ -188,12 +252,12 @@ void loop()
     lcd.setCursor(0, 3);
     lcd.print("FORWARD     >------>");
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
-    ioport.digitalWrite(ED0, HIGH); 
-    ioport.digitalWrite(ED2, HIGH); 
+    ioport.digitalWrite(ED0, HIGH);
+    ioport.digitalWrite(ED2, HIGH);
     delay(100); //100 ms de temps de collage du relais
     digitalWrite(out6, LOW); // je coupe le jus et
-    ioport.digitalWrite(ED0, LOW); 
-    ioport.digitalWrite(ED2, LOW); 
+    ioport.digitalWrite(ED0, LOW);
+    ioport.digitalWrite(ED2, LOW);
 
   }
 
@@ -203,45 +267,53 @@ void loop()
     lcd.print("TRANSMISSION<--S12-<");
     lcd.setCursor(0, 3);
     lcd.print("REVERSE     <------<");
-    
+
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
-    ioport.digitalWrite(ED0, HIGH); 
-    ioport.digitalWrite(ED3, HIGH); 
+    ioport.digitalWrite(ED0, HIGH);
+    ioport.digitalWrite(ED3, HIGH);
     delay(100); //100 ms de temps de collage du relais
     digitalWrite(out6, LOW); // je coupe le jus et
-    ioport.digitalWrite(ED0, LOW); 
+    ioport.digitalWrite(ED0, LOW);
     ioport.digitalWrite(ED3, LOW);
   }
 
   else if
   (trans_refl == HIGH && fwd_reverse == LOW)
   { lcd.setCursor(0, 2);
-    lcd.print("REFLECTION  <--S11-!");
+    lcd.print("REFLECTION  <--S11-");
+    lcd.setCursor(19, 2);
+        lcd.write(byte(0));
     lcd.setCursor(0, 3);
-    lcd.print("FORWARD     <------!");
+    lcd.print("FORWARD     <------");
+        lcd.setCursor(19, 3);
+                lcd.write(byte(1));
 
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
-    ioport.digitalWrite(ED1, HIGH); 
-    ioport.digitalWrite(ED2, HIGH); 
+    ioport.digitalWrite(ED1, HIGH);
+    ioport.digitalWrite(ED2, HIGH);
     delay(100); //100 ms de temps de collage du relais
     digitalWrite(out6, LOW); // je coupe le jus et
-    ioport.digitalWrite(ED1, LOW); 
+    ioport.digitalWrite(ED1, LOW);
     ioport.digitalWrite(ED2, LOW);
   }
 
   else if
-    (trans_refl == HIGH && fwd_reverse == HIGH)
+  (trans_refl == HIGH && fwd_reverse == HIGH)
   { lcd.setCursor(0, 2);
-    lcd.print("REFLECTION  !--S22->");
+    lcd.print("REFLECTION  --S22->");
+        lcd.setCursor(12, 2);
+        lcd.write(byte(3));
     lcd.setCursor(0, 3);
-    lcd.print("REVERSE     !------>");
+    lcd.print("REVERSE     ------>");
+        lcd.setCursor(12, 3);
+        lcd.write(byte(2));
 
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
-    ioport.digitalWrite(ED1, HIGH); 
-    ioport.digitalWrite(ED3, HIGH); 
+    ioport.digitalWrite(ED1, HIGH);
+    ioport.digitalWrite(ED3, HIGH);
     delay(100); //100 ms de temps de collage du relais
     digitalWrite(out6, LOW); // je coupe le jus et
-    ioport.digitalWrite(ED1, LOW); 
+    ioport.digitalWrite(ED1, LOW);
     ioport.digitalWrite(ED3, LOW);
   }
 
@@ -305,19 +377,23 @@ void loop()
   //10dB on=ED8, 40dB on=ED10, 20dB on=ED12,
   //10dB off=ED9, 40dB off=ED11, 20dB off=ED13
 
-  Resistance = analogRead(val_pot);
+  Resistance = analogRead(in6);
   // sélection des valeurs ed8 à ed13 selon val de "att"
 
   att = map(Resistance, 0, 1023, 0, 79);
   //----------------atténuateur 0dB
   if
-  (att <= 9)
+  (att >= 0 && att <= 9)
   {
-    att_disp = 00;
+    att_disp == 00;
     Serial.print("atténuateur 0dB");
     Serial.println();
-    Serial.print("atténuateur");
+    Serial.print("variable att = ");
+    Serial.println(att);
+    Serial.print("variable att_disp = ");
     Serial.println(att_disp);
+    Serial.print("variable resistance = ");
+    Serial.println(Resistance);
     digitalWrite(out6, HIGH);
     ioport.digitalWrite(ED9, HIGH);
     ioport.digitalWrite(ED11, HIGH);
@@ -328,15 +404,27 @@ void loop()
     ioport.digitalWrite(ED11, LOW);
     ioport.digitalWrite(ED13, LOW);
 
+    lcd.setCursor(0, 1);
+    lcd.print("ATT:");
+    lcd.setCursor(4, 1);
+    lcd.print(att_disp);
+    lcd.setCursor(6, 1);
+    lcd.print("dB ");
   }
   //----------------atténuateur 10dB
   else if
   (att >= 10 && att <= 19)
     //
   {
-    att_disp = 10;
+    att_disp == 10;
     Serial.print("atténuateur 10dB");
     Serial.println();
+    Serial.print("variable att = ");
+    Serial.println(att);
+    Serial.print("variable att_disp = ");
+    Serial.println(att_disp);
+    Serial.print("variable resistance = ");
+    Serial.println(Resistance);
     digitalWrite(out6, HIGH);
     ioport.digitalWrite(ED8, HIGH);
     ioport.digitalWrite(ED11, HIGH);
@@ -358,11 +446,17 @@ void loop()
   }
   //----------------atténuateur 20dB
   else if
-  (att >= 10 && att <= 99)
+  (att >= 10 && att <= 29)
   {
-    att_disp = 20;
+    att_disp == 20;
     Serial.print("atténuateur 20dB");
     Serial.println();
+    Serial.print("variable att = ");
+    Serial.println(att);
+    Serial.print("variable att_disp = ");
+    Serial.println(att_disp);
+    Serial.print("variable resistance = ");
+    Serial.println(Resistance);
     digitalWrite(out6, HIGH);
     ioport.digitalWrite(ED9, HIGH);
     ioport.digitalWrite(ED11, HIGH);
@@ -385,9 +479,15 @@ void loop()
   else if
   (att >= 30 && att <= 39)
   {
-    att_disp = 30;
+    att_disp == 30;
     Serial.print("atténuateur 30dB");
     Serial.println();
+    Serial.print("variable att = ");
+    Serial.println(att);
+    Serial.print("variable att_disp = ");
+    Serial.println(att_disp);
+    Serial.print("variable resistance = ");
+    Serial.println(Resistance);
     digitalWrite(out6, HIGH);
     ioport.digitalWrite(ED8, HIGH);
     ioport.digitalWrite(ED11, HIGH);
@@ -410,9 +510,15 @@ void loop()
   else if
   (att >= 40 && att <= 49)
   {
-    att_disp = 40;
+    att_disp == 40;
     Serial.print("atténuateur 40dB");
     Serial.println();
+    Serial.print("variable att = ");
+    Serial.println(att);
+    Serial.print("variable att_disp = ");
+    Serial.println(att_disp);
+    Serial.print("variable resistance = ");
+    Serial.println(Resistance);
     digitalWrite(out6, HIGH);
     ioport.digitalWrite(ED9, HIGH);
     ioport.digitalWrite(ED10, HIGH);
@@ -435,9 +541,15 @@ void loop()
   else if
   (att >= 50 && att <= 59)
   {
-    att_disp = 50;
+    att_disp == 50;
     Serial.print("atténuateur 50dB");
     Serial.println();
+    Serial.print("variable att = ");
+    Serial.println(att);
+    Serial.print("variable att_disp = ");
+    Serial.println(att_disp);
+    Serial.print("variable resistance = ");
+    Serial.println(Resistance);
     digitalWrite(out6, HIGH);
     ioport.digitalWrite(ED8, HIGH);
     ioport.digitalWrite(ED10, HIGH);
@@ -460,9 +572,15 @@ void loop()
   else if
   (att >= 60 && att <= 69)
   {
-    att_disp = 60;
+    att_disp == 60;
     Serial.print("atténuateur 60dB");
     Serial.println();
+    Serial.print("variable att = ");
+    Serial.println(att);
+    Serial.print("variable att_disp = ");
+    Serial.println(att_disp);
+    Serial.print("variable resistance = ");
+    Serial.println(Resistance);
     digitalWrite(out6, HIGH);
     ioport.digitalWrite(ED9, HIGH);
     ioport.digitalWrite(ED10, HIGH);
@@ -483,11 +601,17 @@ void loop()
   }
   //----------------atténuateur 70dB
   else if
-    (att >= 70 && att <= 79)
+  (att >= 70 && att <= 79)
   {
-    att_disp = 70;
+    att_disp == 70;
     Serial.print("atténuateur 70dB");
     Serial.println();
+    Serial.print("variable att = ");
+    Serial.println(att);
+    Serial.print("variable att_disp = ");
+    Serial.println(att_disp);
+    Serial.print("variable resistance = ");
+    Serial.println(Resistance);
     digitalWrite(out6, HIGH);
     ioport.digitalWrite(ED8, HIGH);
     ioport.digitalWrite(ED10, HIGH);
@@ -507,6 +631,9 @@ void loop()
     //Insertion de la valeur d'atténuation
   }
 }
+
+// A pondre : mémoriser un "état" de mesure et ne déclancher la proc QUE s'il y a changement
+
 
 /* description de l'affichage
     VECTOR ANALYZER   /// SCALAR ANALYZER
