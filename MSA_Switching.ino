@@ -186,7 +186,7 @@ void loop()
   { lcd.setCursor(0, 2);
     lcd.print("TRANSMISSION>--S21->");
     lcd.setCursor(0, 3);
-    lcd.print("FORWARD     >----->");
+    lcd.print("FORWARD     >------>");
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
     ioport.digitalWrite(ED0, HIGH); 
     ioport.digitalWrite(ED2, HIGH); 
@@ -200,7 +200,7 @@ void loop()
   else if
   (trans_refl == LOW && fwd_reverse == HIGH)
   { lcd.setCursor(0, 2);
-    lcd.print("TRANSMISSION<--S12--<");
+    lcd.print("TRANSMISSION<--S12-<");
     lcd.setCursor(0, 3);
     lcd.print("REVERSE     <------<");
     
@@ -229,8 +229,8 @@ void loop()
     ioport.digitalWrite(ED2, LOW);
   }
 
-  else
-    (trans_refl == HIGH && fwd_reverse == HIGH);
+  else if
+    (trans_refl == HIGH && fwd_reverse == HIGH)
   { lcd.setCursor(0, 2);
     lcd.print("REFLECTION  !--S22->");
     lcd.setCursor(0, 3);
@@ -482,8 +482,8 @@ void loop()
     //Insertion de la valeur d'atténuation
   }
   //----------------atténuateur 70dB
-  else
-    (att >= 70 && att <= 79);
+  else if
+    (att >= 70 && att <= 79)
   {
     att_disp = 70;
     Serial.print("atténuateur 70dB");
