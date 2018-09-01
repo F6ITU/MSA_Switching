@@ -1,48 +1,46 @@
 # MSA_Switching
 
+Caveat emptor !
+
 This sofware is under development.
 
 Working versions will be stored in specific branches. 
 
 Master is an unstable and ever evolving work.
 
-Frontend switching firmware for the Scotty's Modular Analyzer (Arduino sketch)
+This Arduino sketch is a frontend switching firmware for the Scotty's Modular Analyzer 0-3 GHz spectrum analyzer
+(see http://www.scottyspectrumanalyzer.us/msaslim.html ) 
 
-This is a very simple sequencial switching program for every MSA builder
+It's a is a very simple sequencial switching program for every MSA builder
 
-MSA is a homebrewed 0-3 GHz spectrum analyzer
 
-http://www.scottyspectrumanalyzer.us/msaslim.html
+The MSA application software controls several switching signals
+* Spectrum Analyzer mode / Vector Analyzer one
+* Transmission (S21) reflection (S11) mode
+* Forward /Reverse mode (DUT inversion, for S12 & S22 measurement)
+* 0-1 GHz, 1-2 GHz or 2-3 GHz spectrum's portion
 
-The MSA application software controls several switching signals to pass 
-* From the Spectrum Analyzer mode to the Vector Analyzer one
-* From the Transmission (S21) to the reflexion (S11) mode
-* From the Forward to the Reverse mode (DUT inversion, for S12 & S22 measurement)
-* From the 0-1 GHz to the 1-2 GHz or 2-3 GHz spectrum analysis 
+An optional external control drives a 0/70 dB coaxial step attenuator
 
-Switching signals are delivered by the Control Board with "always on" or "always off" TTL levels. 
+(HP33321, 33320 or 33322 programmable step attenuator or any 3 section attenuator using latching relays) 
 
-As most coaxial relays are using 28V and need temporary switching pulses (latching relays cannot 
-widstand permanent switching voltage), a hardware interface must be used to translate these "level" TTL signals 
-into "momentary" 28V/100ms pulses.
+Most of the switching signals are delivered by the Control Board with "always on" or "always off" TTL levels. 
 
-This interface is based on an arduino board -more precisely a P0warduino shield, 
-and a 16 I/O I2C driven open collector driver board, AlexI2C
-
-Both boards are designed under Kicad and located on this github repository at 
-  https://github.com/F6ITU/P0wArduino
-  and 
-  https://github.com/F6ITU/Alexi2C
-  
-General description could respectively be found at 
-  https://wiki.electrolab.fr/Projets:Lab:2016:Ardui_P0wa
-and 
-https://wiki.electrolab.fr/Projets:Lab:2017:Peripheriques_Angelia#Alexi2C
+As most coaxial relays used in the UHF realm are 28V devices and need temporary switching pulses,
+ a hardware interface must be used to translate these "level" TTL signals into "momentary" 28V/100ms pulses. 
+ 
+ This role is assumed by a "I2C to 16 Open Collector" interface board originally designed for the Alexiares Retrofit project codename AlexI2C, 
+ * pcb files at   https://github.com/F6ITU/Alexi2C) 
+ * General description at https://wiki.electrolab.fr/Projets:Lab:2017:Peripheriques_Angelia#Alexi2C
+ 
+ The main board supporting the microcontroler is another project called P0warduino 
+ 
+ *pcb files at https://github.com/F6ITU/P0wArduino, 
+ * General description at https://wiki.electrolab.fr/Projets:Lab:2016:Ardui_P0wa
 
 An I2C lcd display (4 lines 20 chr) displays the different modes in real time. 
 
-One input and 3 output, which are not controled by the MSA client software, are dedicated to a HP33321, 33320 or 33322 programmable step attenuator
-(or any 3 section attenuator using latching relays) 
+
 
 
 

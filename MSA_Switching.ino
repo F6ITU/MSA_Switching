@@ -130,8 +130,8 @@ void loop()
   Serial.println(msa_vna);// debug
   if
   (msa_vna == 0)  // Inter est à Gnd
-  { lcd.setCursor(12, 0);
-    lcd.print("Mode MSA");
+  { lcd.setCursor(0, 0);
+    lcd.print("   SCALAR ANALYZER  ");
 
     Serial.print("mode msa"); //debug
     Serial.println(); //debug
@@ -143,8 +143,8 @@ void loop()
   }
   else
   {
-    lcd.setCursor(12, 0);
-    lcd.print("Mode VNA");
+    lcd.setCursor(0, 0);
+    lcd.print("   VECTOR ANALYZER  ");
     Serial.print("mode msa"); //debug
     Serial.println(); //debug
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
@@ -156,6 +156,7 @@ void loop()
 
   //---------------------------TRANSMISSION/REFLEXION ---------------------------------
   //input in1, output TRANS=ED0, REFL=ED1,
+  // bit 5 TR VNA Selection, Transmission (0) or Reflection (1)
 
   { trans_refl = digitalRead(in1); //Rappel : in1 = A0
     if (trans_refl == HIGH)
@@ -181,6 +182,9 @@ void loop()
   }
   //---------------------------------FWD-REVERSE S11/S22 ou S12/S21 -----------------
   // Input in2 (A1) Output FWD=ED2, REV=ED3
+  
+  //P4D4
+  // bit 4 FR DUT Direction, Forward (0) or Reverse
 
   {
     fwd_reverse = digitalRead(in2);
@@ -189,7 +193,7 @@ void loop()
       lcd.print("Forward :-----> S21");
 
       digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
-      ioport.digitalWrite(ED2, HIGH); // = relais en position Reflexion colle
+      ioport.digitalWrite(ED2, HIGH); // = relais en position Forward (S21/S11) colle
       delay(100); //100 ms de temps de collage du relais
       digitalWrite(out6, LOW); // je coupe le jus et
       ioport.digitalWrite(ED2, LOW);// replace le niveau logique du relais à zéro
@@ -199,40 +203,63 @@ void loop()
       lcd.print("Reverse :<----- S12");
 
       digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
-      ioport.digitalWrite(ED3, HIGH); // = relais en position Reflexion colle
+      ioport.digitalWrite(ED3, HIGH); // = relais en position Inverse (S12/S22) colle
       delay(100); //100 ms de temps de collage du relais
       digitalWrite(out6, LOW); // je coupe le jus et
       ioport.digitalWrite(ED3, LOW);// replace le niveau logique du relais à zéro
     }
 
-    //---------------------------------------MODE 0-1, 1-2 et 2-3 GHz ------------------------
-    // Input G1 in3, Input G2 In4  (A1) Output G1=ED4, G2=ED5,
+//---------------------------------------BANDE 0-1, 1-2 et 2-3 GHz ------------------------
+  // Input G1 in3, Input G2 In4  (A1) Output G1=ED4, G2=ED5,
+
+  // bit 2 BS0 Band Selection, low order bit
+  // bit 3 BS1 Band Selection, high order bit
+  // 00=0/1 GHz
+  //01=1/2 GHz
+  //10=2/3 GHz
 
   }
   RFG1 = digitalRead(in3); //Rappel : in3 = A2
   RFG2 = digitalRead(in4); //Rappel : in4 = A3
 
   if (RFG1 == LOW && RFG2 == LOW)
-  { lcd.setCursor(0, 1);
-    lcd.print("Bande : 0-1 GHz     ");
+  { lcd.setCursor(9, 1);
+    lcd.print("Band:0-1GHz");
+    digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
+    ioport.digitalWrite(ED4, HIGH); // = relais en position Inverse (S12/S22) colle
+    delay(100); //100 ms de temps de collage du relais
+    digitalWrite(out6, LOW); // je coupe le jus et
+    ioport.digitalWrite(ED4, LOW);// replace le niveau logique du relais à zéro
+
   }
-  //bande 1 GHz confirmée
+
   else if
   (RFG1 == LOW && RFG2 == HIGH)
-  { lcd.setCursor(0, 1);
-    lcd.print("Bande : 1-2 GHz     ");
+  { lcd.setCursor(9, 1);
+    lcd.print("Band:1-2GHz");
+    digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
+    ioport.digitalWrite(ED5, HIGH); // = relais en position Inverse (S12/S22) colle
+    delay(100); //100 ms de temps de collage du relais
+    digitalWrite(out6, LOW); // je coupe le jus et
+    ioport.digitalWrite(ED5, LOW);// replace le niveau logique du relais à zéro
   }
   //bande 2 GHz confirmée
 
   else if
   (RFG1 == HIGH && RFG2 == LOW)
-  { lcd.setCursor(0, 1);
-    lcd.print("Bande : 2-3 GHz     ");
+  { lcd.setCursor(9, 1);
+    lcd.print("Band:2-3GHz");
+    // a priori, 1 et 3 GHz utilisent une même route donc la même commutation, seul le soft change.
+    digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
+    ioport.digitalWrite(ED4, HIGH); // = relais en position Inverse (S12/S22) colle
+    delay(100); //100 ms de temps de collage du relais
+    digitalWrite(out6, LOW); // je coupe le jus et
+    ioport.digitalWrite(ED4, LOW);// replace le niveau logique du relais à zéro
 
   }
   else
-  { lcd.setCursor(0, 1);
-    lcd.print("Bande : ERREUR      ");
+  { lcd.setCursor(9, 1);
+    lcd.print("Band:ERROR!");
   }
 
   //------------------------------------------------------ATTENUATEUR--------------
@@ -266,9 +293,10 @@ void loop()
     ioport.digitalWrite(ED13, LOW);
 
   }
-  //----------------atténuateur 10dB
+  //----------------atténuateur 10dB--------------------------------------------------------------------------------------------------------------------------------------------------
   else if
   (att >= 10 && att <= 19)
+  //
   {
     att_disp = 10;
     Serial.print("atténuateur 10dB");
@@ -283,12 +311,12 @@ void loop()
     ioport.digitalWrite(ED11, LOW);
     ioport.digitalWrite(ED13, LOW);
 
-    lcd.setCursor(0, 0);
-    lcd.print("Att.:");
-    lcd.setCursor(6, 0);
+    lcd.setCursor(0, 1);
+    lcd.print("ATT:");
+    lcd.setCursor(4, 1);
     lcd.print(att_disp);
-    lcd.setCursor(8, 0);
-    lcd.print("dB");
+    lcd.setCursor(6, 1);
+    lcd.print("dB ");
     //Insertion de la valeur d'atténuation
 
   }
@@ -309,12 +337,12 @@ void loop()
     ioport.digitalWrite(ED11, LOW);
     ioport.digitalWrite(ED12, LOW);
 
-    lcd.setCursor(0, 0);
-    lcd.print("Att.:");
-    lcd.setCursor(6, 0);
+    lcd.setCursor(0, 1);
+    lcd.print("ATT:");
+    lcd.setCursor(4, 1);
     lcd.print(att_disp);
-    lcd.setCursor(8, 0);
-    lcd.print("dB");
+    lcd.setCursor(6, 1);
+    lcd.print("dB ");
     //Insertion de la valeur d'atténuation
   }
   //----------------atténuateur 30dB
@@ -334,12 +362,12 @@ void loop()
     ioport.digitalWrite(ED11, LOW);
     ioport.digitalWrite(ED12, LOW);
 
-    lcd.setCursor(0, 0);
-    lcd.print("Att.:");
-    lcd.setCursor(6, 0);
+    lcd.setCursor(0, 1);
+    lcd.print("ATT:");
+    lcd.setCursor(4, 1);
     lcd.print(att_disp);
-    lcd.setCursor(8, 0);
-    lcd.print("dB");
+    lcd.setCursor(6, 1);
+    lcd.print("dB ");
     //Insertion de la valeur d'atténuation
   }
   //----------------atténuateur 40dB
@@ -358,13 +386,13 @@ void loop()
     ioport.digitalWrite(ED9, LOW);
     ioport.digitalWrite(ED10, LOW);
     ioport.digitalWrite(ED13, LOW);
-
-    lcd.setCursor(0, 0);
-    lcd.print("Att.:");
-    lcd.setCursor(6, 0);
+    
+    lcd.setCursor(0, 1);
+    lcd.print("ATT:");
+    lcd.setCursor(4, 1);
     lcd.print(att_disp);
-    lcd.setCursor(8, 0);
-    lcd.print("dB");
+    lcd.setCursor(6, 1);
+    lcd.print("dB ");
     //Insertion de la valeur d'atténuation
   }
   //----------------atténuateur 50dB
@@ -384,12 +412,12 @@ void loop()
     ioport.digitalWrite(ED10, LOW);
     ioport.digitalWrite(ED13, LOW);
 
-    lcd.setCursor(0, 0);
-    lcd.print("Att.:");
-    lcd.setCursor(6, 0);
+    lcd.setCursor(0, 1);
+    lcd.print("ATT:");
+    lcd.setCursor(4, 1);
     lcd.print(att_disp);
-    lcd.setCursor(8, 0);
-    lcd.print("dB");
+    lcd.setCursor(6, 1);
+    lcd.print("dB ");
     //Insertion de la valeur d'atténuation
   }
   //----------------atténuateur 60dB
@@ -409,12 +437,12 @@ void loop()
     ioport.digitalWrite(ED10, LOW);
     ioport.digitalWrite(ED12, LOW);
 
-    lcd.setCursor(0, 0);
-    lcd.print("Att.:");
-    lcd.setCursor(6, 0);
+    lcd.setCursor(0, 1);
+    lcd.print("ATT:");
+    lcd.setCursor(4, 1);
     lcd.print(att_disp);
-    lcd.setCursor(8, 0);
-    lcd.print("dB");
+    lcd.setCursor(6, 1);
+    lcd.print("dB ");
     //Insertion de la valeur d'atténuation
   }
   //----------------atténuateur 70dB
@@ -434,83 +462,27 @@ void loop()
     ioport.digitalWrite(ED10, LOW);
     ioport.digitalWrite(ED12, LOW);
 
-    lcd.setCursor(0, 0);
-    lcd.print("Att.:");
-    lcd.setCursor(6, 0);
+    lcd.setCursor(0, 1);
+    lcd.print("ATT:");
+    lcd.setCursor(4, 1);
     lcd.print(att_disp);
-    lcd.setCursor(8, 0);
-    lcd.print("dB");
+    lcd.setCursor(6, 1);
+    lcd.print("dB ");
     //Insertion de la valeur d'atténuation
   }
 
-
-  //-------------------------------Mode 0-1 GHz--------------
-  // bit 2 BS0 Band Selection, low order bit
-  // bit 3 BS1 Band Selection, high order bit
-  // 00=0/1 GHz
-  //01=1/2 GHz
-  //10=2/3 GHz
-  RFG1 = digitalRead(in3); //Rappel : in3 = A2
-  RFG2 = digitalRead(in4); //Rappel : in4 = A3
-  {
-
-  }
-  if (RFG1 == LOW && RFG2 == LOW)
-  { lcd.setCursor(0, 1);
-    lcd.print("Bande : 0-1 GHz     ");
-  }
-  //bande 1 GHz confirmée
-  else if
-  (RFG1 == LOW && RFG2 == HIGH)
-  { lcd.setCursor(0, 1);
-    lcd.print("Bande : 1-2 GHz     ");
-  }
-  //bande 2 GHz confirmée
-
-  else if
-  (RFG1 == HIGH && RFG2 == LOW)
-  { lcd.setCursor(0, 1);
-    lcd.print("Bande : 2-3 GHz     ");
-
-  }
-  else
-  { lcd.setCursor(0, 1);
-    lcd.print("Bande : ERREUR      ");
-  }
-
   //------------------------------------Mode FWD  -----------------
-  //P4D4
-  // bit 4 FR DUT Direction, Forward (0) or Reverse
 
-  fwd_reverse = digitalRead(in2); //Rappel : in2 = A1
-  if (fwd_reverse == LOW)
-  { lcd.setCursor(0, 3);
-    lcd.print("Forward :-----> S21");
-  }
 
-  //P4D4 est bas
-  else
-  { lcd.setCursor(0, 3);
-    lcd.print("Reverse :<---- S12");
-  }
-  //P4D4 est haut
 
-  //--------------Mode Transmission-------------------------------
-  //P4D5
-  // bit 5 TR VNA Selection, Transmission (0) or Reflection
-
-  {
-    trans_refl = digitalRead(in1); //Rappel : in1 = A0
-    if (trans_refl == LOW)
-      // mode transmission S21 (ou S12)
-    { lcd.setCursor(0, 2);
-      lcd.print("Transmission S21/S12");
-      lcd.print("Reflexion S11/S22   ");
-    }
-    else
-      // mode réflexion S11 (ou S22)
-    { lcd.setCursor(0, 2);
-      lcd.print("Reflexion S11/S22   ");
-    }
-  }
 }
+
+/* description de l'affichage
+ *  VECTOR ANALYZER   /// SCALAR ANALYZER
+ *  ATT:XXdB Band:0-1GHz
+ *  TRANSMISSION >---21-->      REFLECTION <--S11--|        LES DEUX LIGNES BLANCHES SI EN MODE MSA
+ *  FWD                         FWD        <-------|
+ *  
+ *  TRANSMISSION <---12--<      REFLECTION |--S22-->       LES DEUX LIGNES BLANCHES SI EN MODE MSA
+ *  REVERSE                     REVERSE   |------->
+  */
