@@ -5,7 +5,7 @@
 //déclaration de la lib pca9555 de Nico Verduin
 //https://github.com/nicoverduin/PCA9555
 #include "clsPCA9555.h"
-//----- --------------------------------------------------------Adressage matériel ---------------------------------------------
+//-------------------------------------------------------------Adressage matériel ---------------------------------------------
 //Afficheur
 // variables API : Adresse, nbr chr, nbr lignes
 LiquidCrystal_I2C lcd(0x3F, 20, 4);
@@ -155,61 +155,97 @@ void loop()
   }
 
   //---------------------------TRANSMISSION/REFLEXION ---------------------------------
-  //input in1, output TRANS=ED0, REFL=ED1,
-  // bit 5 TR VNA Selection, Transmission (0) or Reflection (1)
+  //input in1, output 
+  //                    TRANS=ED0, 
+  //                    REFL=ED1,
+  //P4 bit 5 TR VNA Selection, Transmission (0) or Reflection (1)
 
-  { trans_refl = digitalRead(in1); //Rappel : in1 = A0
-    if (trans_refl == HIGH)
-    { lcd.setCursor(0, 2);
-      lcd.print("Reflexion S11/S22   ");
+  // Input in2 (A1) Output 
+  //                    FWD=ED2, 
+  //                    REV=ED3
+  //P4 bit 4 DUT Direction, Forward (0) or Reverse (1)
+  /*
+    Si TRANS et FWD alors S21
+    Si TRANS et REV alors S12
+    Si REFL  et FWD alors S11
+    Si REFL  et REV alors S22
+                              Affichage ligne 2 et 3
 
-      digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
-      ioport.digitalWrite(ED1, HIGH); // = relais en position Reflexion colle
-      delay(100); //100 ms de temps de collage du relais
-      digitalWrite(out6, LOW); // je coupe le jus et
-      ioport.digitalWrite(ED1, LOW);// replace le niveau logique du relais à zéro
-    }
-    else
-    { lcd.setCursor(0, 2);
-      lcd.print("Transmission S21/S12");
+    TRANSMISSION<--12--<      REFLECTION |--S11-->       LES DEUX LIGNES BLANCHES SI EN MODE MSA
+    REVERSE     <------<      FORWARD    |_______>
 
-      digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
-      ioport.digitalWrite(ED0, HIGH); // = relais en position Reflexion colle
-      delay(100); //100 ms de temps de collage du relais
-      digitalWrite(out6, LOW); // je coupe le jus et
-      ioport.digitalWrite(ED0, LOW);// replace le niveau logique du relais à zéro
-    }
+  */
+
+
+
+  trans_refl = digitalRead(in1);
+  fwd_reverse = digitalRead(in2);
+
+  if
+  (trans_refl == LOW && fwd_reverse == LOW)
+  { lcd.setCursor(0, 2);
+    lcd.print("TRANSMISSION>--S21->");
+    lcd.setCursor(0, 3);
+    lcd.print("FORWARD     >----->");
+    digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
+    ioport.digitalWrite(ED0, HIGH); 
+    ioport.digitalWrite(ED2, HIGH); 
+    delay(100); //100 ms de temps de collage du relais
+    digitalWrite(out6, LOW); // je coupe le jus et
+    ioport.digitalWrite(ED0, LOW); 
+    ioport.digitalWrite(ED2, LOW); 
+
   }
-  //---------------------------------FWD-REVERSE S11/S22 ou S12/S21 -----------------
-  // Input in2 (A1) Output FWD=ED2, REV=ED3
-  
-  //P4D4
-  // bit 4 FR DUT Direction, Forward (0) or Reverse
 
-  {
-    fwd_reverse = digitalRead(in2);
-    if (fwd_reverse == HIGH)
-    { lcd.setCursor(0, 3);
-      lcd.print("Forward :-----> S21");
+  else if
+  (trans_refl == LOW && fwd_reverse == HIGH)
+  { lcd.setCursor(0, 2);
+    lcd.print("TRANSMISSION<--S12--<");
+    lcd.setCursor(0, 3);
+    lcd.print("REVERSE     <------<");
+    
+    digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
+    ioport.digitalWrite(ED0, HIGH); 
+    ioport.digitalWrite(ED3, HIGH); 
+    delay(100); //100 ms de temps de collage du relais
+    digitalWrite(out6, LOW); // je coupe le jus et
+    ioport.digitalWrite(ED0, LOW); 
+    ioport.digitalWrite(ED3, LOW);
+  }
 
-      digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
-      ioport.digitalWrite(ED2, HIGH); // = relais en position Forward (S21/S11) colle
-      delay(100); //100 ms de temps de collage du relais
-      digitalWrite(out6, LOW); // je coupe le jus et
-      ioport.digitalWrite(ED2, LOW);// replace le niveau logique du relais à zéro
-    }
-    else
-    { lcd.setCursor(0, 3);
-      lcd.print("Reverse :<----- S12");
+  else if
+  (trans_refl == HIGH && fwd_reverse == LOW)
+  { lcd.setCursor(0, 2);
+    lcd.print("REFLECTION  <--S11-!");
+    lcd.setCursor(0, 3);
+    lcd.print("FORWARD     <------!");
 
-      digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
-      ioport.digitalWrite(ED3, HIGH); // = relais en position Inverse (S12/S22) colle
-      delay(100); //100 ms de temps de collage du relais
-      digitalWrite(out6, LOW); // je coupe le jus et
-      ioport.digitalWrite(ED3, LOW);// replace le niveau logique du relais à zéro
-    }
+    digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
+    ioport.digitalWrite(ED1, HIGH); 
+    ioport.digitalWrite(ED2, HIGH); 
+    delay(100); //100 ms de temps de collage du relais
+    digitalWrite(out6, LOW); // je coupe le jus et
+    ioport.digitalWrite(ED1, LOW); 
+    ioport.digitalWrite(ED2, LOW);
+  }
 
-//---------------------------------------BANDE 0-1, 1-2 et 2-3 GHz ------------------------
+  else
+    (trans_refl == HIGH && fwd_reverse == HIGH);
+  { lcd.setCursor(0, 2);
+    lcd.print("REFLECTION  !--S22->");
+    lcd.setCursor(0, 3);
+    lcd.print("REVERSE     !------>");
+
+    digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
+    ioport.digitalWrite(ED1, HIGH); 
+    ioport.digitalWrite(ED3, HIGH); 
+    delay(100); //100 ms de temps de collage du relais
+    digitalWrite(out6, LOW); // je coupe le jus et
+    ioport.digitalWrite(ED1, LOW); 
+    ioport.digitalWrite(ED3, LOW);
+  }
+
+  //---------------------------------------BANDE 0-1, 1-2 et 2-3 GHz ------------------------
   // Input G1 in3, Input G2 In4  (A1) Output G1=ED4, G2=ED5,
 
   // bit 2 BS0 Band Selection, low order bit
@@ -218,7 +254,7 @@ void loop()
   //01=1/2 GHz
   //10=2/3 GHz
 
-  }
+
   RFG1 = digitalRead(in3); //Rappel : in3 = A2
   RFG2 = digitalRead(in4); //Rappel : in4 = A3
 
@@ -293,10 +329,10 @@ void loop()
     ioport.digitalWrite(ED13, LOW);
 
   }
-  //----------------atténuateur 10dB--------------------------------------------------------------------------------------------------------------------------------------------------
+  //----------------atténuateur 10dB
   else if
   (att >= 10 && att <= 19)
-  //
+    //
   {
     att_disp = 10;
     Serial.print("atténuateur 10dB");
@@ -386,7 +422,7 @@ void loop()
     ioport.digitalWrite(ED9, LOW);
     ioport.digitalWrite(ED10, LOW);
     ioport.digitalWrite(ED13, LOW);
-    
+
     lcd.setCursor(0, 1);
     lcd.print("ATT:");
     lcd.setCursor(4, 1);
@@ -470,19 +506,14 @@ void loop()
     lcd.print("dB ");
     //Insertion de la valeur d'atténuation
   }
-
-  //------------------------------------Mode FWD  -----------------
-
-
-
 }
 
 /* description de l'affichage
- *  VECTOR ANALYZER   /// SCALAR ANALYZER
- *  ATT:XXdB Band:0-1GHz
- *  TRANSMISSION >---21-->      REFLECTION <--S11--|        LES DEUX LIGNES BLANCHES SI EN MODE MSA
- *  FWD                         FWD        <-------|
- *  
- *  TRANSMISSION <---12--<      REFLECTION |--S22-->       LES DEUX LIGNES BLANCHES SI EN MODE MSA
- *  REVERSE                     REVERSE   |------->
-  */
+    VECTOR ANALYZER   /// SCALAR ANALYZER
+    ATT:XXdB Band:0-1GHz
+    TRANSMISSION >---21-->      REFLECTION <--S11--|        LES DEUX LIGNES BLANCHES SI EN MODE MSA
+    FWD                         FWD        <-------|
+
+    TRANSMISSION <---12--<      REFLECTION |--S22-->       LES DEUX LIGNES BLANCHES SI EN MODE MSA
+    REVERSE                     REVERSE    |_______>
+*/
