@@ -98,14 +98,16 @@ void setup()
   Serial.begin(9600);
   Serial.println("Lancement");
   //-----------------------------------FOR DEBUGGING ONLY------------------------------------------
-  lcd.init(); // initialisation de l'afficheur
-  //MODULE P0WARDUINo gpio locales
+// initialisation de l'afficheur
+  lcd.init(); 
 
+//mise en mémoire des caractères spéciaux pour le lcd
 lcd.createChar(0, L1);
 lcd.createChar(1, L2);
 lcd.createChar(2, L3);
 lcd.createChar(3, L4);
 
+  //MODULE P0WARDUINo gpio locales
   pinMode(out6, OUTPUT);
   //out6 va ouvrir un circuit 12V de mise en fonctionnement du step-up 28V, (via FET de puissance) et sera mis en service un peu avant
   //les déclanchements, puis désactivé immédiatement après pour éliminer tout risque de bruit de découpage durant la mesure
@@ -198,6 +200,7 @@ void loop()
 
   if
   (msa_vna == 0)  // Inter est à Gnd
+//  STO_VNA=0;
   { lcd.setCursor(0, 0);
     lcd.print("   SCALAR ANALYZER  ");
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
@@ -207,7 +210,7 @@ void loop()
     ioport.digitalWrite(ED6, LOW);// replace le niveau logique du relais à zéro
   }
   else
-
+//STO_VNA=1
   {
     lcd.setCursor(0, 0);
     lcd.print("   VECTOR ANALYZER  ");
@@ -300,11 +303,11 @@ void loop()
   else if
   (trans_refl == HIGH && fwd_reverse == HIGH)
   { lcd.setCursor(0, 2);
-    lcd.print("REFLECTION  --S22->");
+    lcd.print("REFLECTION  --S22-->");
         lcd.setCursor(12, 2);
         lcd.write(byte(3));
     lcd.setCursor(0, 3);
-    lcd.print("REVERSE     ------>");
+    lcd.print("REVERSE     ------->");
         lcd.setCursor(12, 3);
         lcd.write(byte(2));
 
