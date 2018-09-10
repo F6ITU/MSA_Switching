@@ -15,7 +15,7 @@ It's a is a very simple sequencial switching program for every MSA builder
 
 
 The MSA application software controls several switching signals
-* Spectrum Analyzer mode / Vector Analyzer one
+* Spectrum Analyzer mode / Vector Analyzer mode
 * Transmission (S21) reflection (S11) mode
 * Forward /Reverse mode (DUT inversion, for S12 & S22 measurement)
 * 0-1 GHz, 1-2 GHz or 2-3 GHz spectrum's portion
@@ -46,14 +46,18 @@ Ce code sert à piloter des relais 28V bi-stables (16 bobines) à partir de 8 si
 Pour exciter ces relais, un régulateur step-up est mis en fonctions uniquement si l’état des signaux TTL a changé (pour éviter tout bruit d’alimentation à découpage durant une mesure) 
 Un écran LCD doit refléter l’état des commutations et ne fournir que les informations nécessaires (ex : en mode MSA, analyseur de spectre, les indications « direct/réfléchi » et « sens de la mesure » n’ont pas de signification et ne doivent pas être affichées
 Schématiquement : 
--------------------------------------------------- Dans le Setup() -----------------------------------------------------------------
+
+-------------------------------------------------- Dans le Setup() -------------------------------------------
+
 Des variables sont initialisées par défaut : 
 -	Mode MSA
 -	Atténuateur 0 dB
 -	Bande 0-1 GHz
 -	Mode transmission (non affiché puisque non VNA)
 -	Sens direct (forward) 
------------------------------------------------------Dans le « Main » (loop() )-----------------------------------------------------
+
+-----------------------------------------------------Dans le « Main » (loop() )--------------------------------
+
 -	Ces variables sont rebaptisées « variable_old » pour chaque paramètre
 -	5 fonctions lecture différentes sont chaînées, chacune chargée de la lecture de l’état effectif des relais/signaux et de l’affichage de l’état sur un LCD.
 -	Ces fonctions retournent l’état effectif sous forme de variable
@@ -61,13 +65,17 @@ Des variables sont initialisées par défaut :
 o	Si Variable !=Variable_old, alors lancer une ou plusieurs des cinq  fonctions écriture chargée de commuter les relais, modifier l’affichage et retourner une variable actualisée.
 o	Si Variable = Variable_old, alors passer au test suivant
 -	Fin du programme, retour en début de boucle
--------------------------------------------------------Liste des fonctions de lecture() ---------------------------------------------
+
+-------------------------------------------------------Liste des fonctions de lecture() -----------------------
+
 Lecture Mode MSA()
 Lecture Atténuateur()
 Lecture Bande()
 Lecture Mode trans/refl() 
 Lecture Sens direct/rev ()
------------------------ -------------------------------Liste des fonctions Ecriture relais et afficheur() ---------------------------
+
+----------------------- -------------------------------Liste des fonctions Ecriture relais et afficheur() -----
+
 Ecriture Mode MSA()
 Ecriture Atténuateur()
 Ecriture Bande()
