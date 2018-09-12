@@ -127,6 +127,7 @@ void setup()
   lcd.createChar(1, L2);
   lcd.createChar(2, L3);
   lcd.createChar(3, L4);
+  lcd.clear();
 
   //MODULE P0WARDUINo gpio locales
   pinMode(out6, OUTPUT);
@@ -198,23 +199,10 @@ void loop()
 {
   lcd.backlight();
 
-  /*
-     dans un premier temps, je lance chaque fonction une à une. Chaque fonction retourne une valeur
-     STO_VNA
-     STO_ATT
-     STO_REFL
-     STO_GHz
-     Ces fonctions doivent donc être lancées depuis void Setup() puisqu'exécutées une seule fois
-     Ensuite, dans le main, je me contente de lire les entrées et vérifier si elle sont égales
-     a la valeur stockée. Si oui, on ignore et on boucle, si non, on appelle la fonction.
-  */
-
   // effacement de la zone refl/fwd lorsque sur la position MSA
   // faire un beep en cas de changement d'état
 
 
-  //---------------------------MSA/VNA---------------------------------
-  //input in5, output MSA=ED6, VNA=ED7,
 
   msa_read();
   {
@@ -254,6 +242,9 @@ void loop()
 //---------------------------------les fonctions de lecture---------------------------------------------------------------------------------------------------
 //________________________________________MSA/VNA lecture__________________________
 byte msa_read()
+
+//---------------------------MSA/VNA---------------------------------
+//input in5, output MSA=ED6, VNA=ED7,
 {
   msa_vna = analogRead(in5); //Rappel : in5= A6 broche analogique
 
@@ -264,6 +255,10 @@ byte msa_read()
     STO_VNA = 0;
     lcd.setCursor(0, 0);
     lcd.print("   SCALAR ANALYZER  ");
+    lcd.setCursor(0, 2);
+    lcd.print("                    ");
+    lcd.setCursor(0, 3);
+    lcd.print("                    ");
     return STO_VNA;
   }
   else
@@ -302,11 +297,17 @@ byte Trans_read()
 {
   trans_refl = digitalRead(in1);
   fwd_reverse = digitalRead(in2);
-
+  msa_vna = analogRead(in5);
   if
+  (msa_vna == LOW)  // mode msa
+  {
+    //je saute l'affichage de trans et rev qui n'ont aucune signification en analyse scalaire
+    return STO_TRANS = 0;
+  }
+  else if
   (trans_refl == LOW && fwd_reverse == LOW)
   {
-    STO_TRANS = 0; // transmission forward (S21)
+    STO_TRANS = 1; // transmission forward (S21)
     lcd.setCursor(0, 2);
     lcd.print("TRANSMISSION>--S21->");
     lcd.setCursor(0, 3);
@@ -317,7 +318,7 @@ byte Trans_read()
   else if
   (trans_refl == LOW && fwd_reverse == HIGH)
   {
-    STO_TRANS = 1; //transmission reverse (s12)
+    STO_TRANS = 2; //transmission reverse (s12)
     lcd.setCursor(0, 2);
     lcd.print("TRANSMISSION<--S12-<");
     lcd.setCursor(0, 3);
@@ -431,9 +432,9 @@ byte ATT_read()
     lcd.setCursor(0, 1);
     lcd.print("ATT:");
     lcd.setCursor(4, 1);
-    lcd.print(att_disp);
-    lcd.setCursor(6, 1);
-    lcd.print("dB ");
+    lcd.print(STO_ATT);
+    lcd.setCursor(5, 1);
+    lcd.print("0dB ");
     return STO_ATT;
   }
   //----------------atténuateur 10dB
@@ -446,9 +447,9 @@ byte ATT_read()
     lcd.setCursor(0, 1);
     lcd.print("ATT:");
     lcd.setCursor(4, 1);
-    lcd.print(att_disp);
-    lcd.setCursor(6, 1);
-    lcd.print("dB ");
+    lcd.print(STO_ATT);
+    lcd.setCursor(5, 1);
+    lcd.print("0dB ");
     return STO_ATT;
   }
   //----------------atténuateur 20dB
@@ -460,9 +461,9 @@ byte ATT_read()
     lcd.setCursor(0, 1);
     lcd.print("ATT:");
     lcd.setCursor(4, 1);
-    lcd.print(att_disp);
-    lcd.setCursor(6, 1);
-    lcd.print("dB ");
+    lcd.print(STO_ATT);
+    lcd.setCursor(5, 1);
+    lcd.print("0dB ");
     return STO_ATT;
   }
   //----------------atténuateur 30dB
@@ -474,9 +475,9 @@ byte ATT_read()
     lcd.setCursor(0, 1);
     lcd.print("ATT:");
     lcd.setCursor(4, 1);
-    lcd.print(att_disp);
-    lcd.setCursor(6, 1);
-    lcd.print("dB ");
+    lcd.print(STO_ATT);
+    lcd.setCursor(5, 1);
+    lcd.print("0dB ");
     return STO_ATT;
   }
   //----------------atténuateur 40dB
@@ -484,13 +485,12 @@ byte ATT_read()
   (att >= 40 && att <= 49)
   {
     STO_ATT = 4;
-    att_disp == 40;
     lcd.setCursor(0, 1);
     lcd.print("ATT:");
     lcd.setCursor(4, 1);
-    lcd.print(att_disp);
-    lcd.setCursor(6, 1);
-    lcd.print("dB ");
+    lcd.print(STO_ATT);
+    lcd.setCursor(5, 1);
+    lcd.print("0dB ");
     return STO_ATT;
   }
   //----------------atténuateur 50dB
@@ -502,9 +502,9 @@ byte ATT_read()
     lcd.setCursor(0, 1);
     lcd.print("ATT:");
     lcd.setCursor(4, 1);
-    lcd.print(att_disp);
-    lcd.setCursor(6, 1);
-    lcd.print("dB ");
+    lcd.print(STO_ATT);
+    lcd.setCursor(5, 1);
+    lcd.print("0dB ");
     return STO_ATT;
   }
   //----------------atténuateur 60dB
@@ -516,9 +516,9 @@ byte ATT_read()
     lcd.setCursor(0, 1);
     lcd.print("ATT:");
     lcd.setCursor(4, 1);
-    lcd.print(att_disp);
-    lcd.setCursor(6, 1);
-    lcd.print("dB ");
+    lcd.print(STO_ATT);
+    lcd.setCursor(5, 1);
+    lcd.print("0dB ");
     return STO_ATT;
   }
   //----------------atténuateur 70dB
@@ -530,9 +530,9 @@ byte ATT_read()
     lcd.setCursor(0, 1);
     lcd.print("ATT:");
     lcd.setCursor(4, 1);
-    lcd.print(att_disp);
-    lcd.setCursor(6, 1);
-    lcd.print("dB ");
+    lcd.print(STO_ATT);
+    lcd.setCursor(5, 1);
+    lcd.print("0dB ");
     return STO_ATT;
   }
 }
