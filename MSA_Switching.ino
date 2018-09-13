@@ -49,23 +49,23 @@ unsigned int att_disp;
 byte msa_read();
 byte msa_write();
 boolean STO_VNA;
+boolean STO_VNA_OLD;
 
 byte Trans_read();
 byte Trans_write();
 byte STO_TRANS;
+byte STO_TRANS_OLD;
 
 byte GHZ_read();
 byte GHZ_write();
 byte STO_GHZ;
+byte STO_GHZ_OLD;
 
 byte ATT_read();
 byte ATT_write();
 byte STO_ATT;
+byte STO_ATT_OLD;
 
-/*    STO_ATT
-
-    STO_GHz
-*/
 // dessin des crochets
 
 byte L1[8] = {
@@ -167,6 +167,16 @@ void setup()
   {
     ioport.pinMode(i, OUTPUT);
   }
+  // initialisation des variables
+  STO_VNA = 0; //mode MSA
+  STO_GHZ = 0; // mode 0-1 GHz
+  STO_TRANS = 0; // mode msa par défaut, don't care pour sto_trans qui change dès que VNA
+  STO_ATT = 0; // par défaut, ATT est à 0 dB
+
+  STO_VNA_OLD = 0;
+  STO_GHZ_OLD = 0;
+  STO_TRANS_OLD = 0;
+  STO_ATT_OLD = 0;
 }
 // pour une déclaration broche à broche :   ioport.pinMode(ED14, INPUT); (ou OUTPUT)
 // dans le main, l'activation de la broche se fera par
@@ -202,41 +212,58 @@ void loop()
   // effacement de la zone refl/fwd lorsque sur la position MSA
   // faire un beep en cas de changement d'état
 
+  // initialisation des variables
+  STO_VNA_OLD = STO_VNA;
+  STO_GHZ_OLD = STO_GHZ;
+  STO_TRANS_OLD = STO_TRANS;
+  STO_ATT_OLD = STO_ATT;
 
 
   msa_read();
+
+
+  if (STO_VNA != STO_VNA_OLD)
   {
-    Serial.println ("");
-    Serial.print("la variable msa_vna est : ");
+    Serial.println("changement");
+    Serial.print("vna         = ");
     Serial.println(STO_VNA);
-    delay(3000);
+    Serial.print("vna old    =  ");
+    Serial.println(STO_VNA_OLD);
+    msa_write();
   }
 
   Trans_read();
+
+  if (STO_TRANS != STO_TRANS_OLD)
   {
-    Serial.println ("");
-    Serial.print("la variable transmission/forward est : ");
+    Serial.println("changement");
+    Serial.print("trans         = ");
     Serial.println(STO_TRANS);
+    Serial.print("trans old    =  ");
+    Serial.println(STO_TRANS_OLD);
+    Trans_write();
   }
   GHZ_read();
 
   {
-    Serial.println ("");
-    Serial.print("la variable GHZ est : ");
-    Serial.println(STO_GHZ);
+    if (STO_GHZ != STO_GHZ_OLD)
+      GHZ_write();
   }
 
   ATT_read();
-
   {
-    Serial.println ("");
-    Serial.print("la variable ATT est : ");
-    Serial.println(STO_ATT);
+    if (STO_ATT != STO_ATT_OLD)
+      ATT_write();
   }
 
+  delay(100);
 }
 
 // A pondre : mémoriser un "état" de mesure et ne déclancher la proc QUE s'il y a changement
+
+//---------------------------------------------------------------FIN  DU PROGRAMME----------------------------------------------------------------------------------
+
+
 
 
 //---------------------------------les fonctions de lecture---------------------------------------------------------------------------------------------------
@@ -246,15 +273,16 @@ byte msa_read()
 //---------------------------MSA/VNA---------------------------------
 //input in5, output MSA=ED6, VNA=ED7,
 {
+
   msa_vna = analogRead(in5); //Rappel : in5= A6 broche analogique
 
   if
 
-  (msa_vna == LOW)  // Inter est à Gnd
+  (msa_vna == LOW)  // msa
   {
     STO_VNA = 0;
     lcd.setCursor(0, 0);
-    lcd.print("   SCALAR ANALYZER  ");
+    lcd.print(" SPECTRUM  ANALYZER ");
     lcd.setCursor(0, 2);
     lcd.print("                    ");
     lcd.setCursor(0, 3);
@@ -266,7 +294,7 @@ byte msa_read()
   {
     STO_VNA = 1;
     lcd.setCursor(0, 0);
-    lcd.print("   VECTOR ANALYZER  ");
+    lcd.print("  VECTOR  ANALYZER  ");
     return STO_VNA;
   }
 }
@@ -297,17 +325,24 @@ byte Trans_read()
 {
   trans_refl = digitalRead(in1);
   fwd_reverse = digitalRead(in2);
-  msa_vna = analogRead(in5);
+  msa_vna = analogRead(in5); //avant de jouer avec les extensions vna, je vérifie que l'on ne soit pas en mode msa
+
   if
-  (msa_vna == LOW)  // mode msa
+  (msa_vna == LOW)  // msa
   {
-    //je saute l'affichage de trans et rev qui n'ont aucune signification en analyse scalaire
-    return STO_TRANS = 0;
+    STO_VNA = 0;
+    STO_TRANS = 0;
+    STO_TRANS_OLD = 0;
+    lcd.setCursor(0, 2);
+    lcd.print("                    ");
+    lcd.setCursor(0, 3);
+    lcd.print("                    ");
+    return STO_TRANS;
   }
   else if
   (trans_refl == LOW && fwd_reverse == LOW)
   {
-    STO_TRANS = 1; // transmission forward (S21)
+    STO_TRANS = 1; // vna transmission forward (S21)
     lcd.setCursor(0, 2);
     lcd.print("TRANSMISSION>--S21->");
     lcd.setCursor(0, 3);
@@ -318,7 +353,7 @@ byte Trans_read()
   else if
   (trans_refl == LOW && fwd_reverse == HIGH)
   {
-    STO_TRANS = 2; //transmission reverse (s12)
+    STO_TRANS = 2; //vna transmission reverse (s12)
     lcd.setCursor(0, 2);
     lcd.print("TRANSMISSION<--S12-<");
     lcd.setCursor(0, 3);
@@ -329,7 +364,7 @@ byte Trans_read()
   else if
   (trans_refl == HIGH && fwd_reverse == LOW)
   {
-    STO_TRANS = 3; // reflexion forward (s11)
+    STO_TRANS = 3; // vna reflexion forward (s11)
     lcd.setCursor(0, 2);
     lcd.print("REFLECTION  <--S11-");
     lcd.setCursor(19, 2);
@@ -344,7 +379,7 @@ byte Trans_read()
   else if
   (trans_refl == HIGH && fwd_reverse == HIGH)
   {
-    STO_TRANS = 4; // reflexion reverse (s22)
+    STO_TRANS = 4; // vna reflexion reverse (s22)
     lcd.setCursor(0, 2);
     lcd.print("REFLECTION  --S22-->");
     lcd.setCursor(12, 2);
@@ -355,6 +390,7 @@ byte Trans_read()
     lcd.write(byte(2));
     return STO_TRANS;
   }
+
 }
 
 //________________________________________GHZ lecture_______________
@@ -542,23 +578,27 @@ byte ATT_read()
 byte msa_write()
 {
   if
-  (msa_vna == LOW)  // Inter est à Gnd
-    //STO_VNA=0;
+  (msa_vna == LOW)  // donc mode msa
+
   {
+    STO_VNA = 0;
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
     ioport.digitalWrite(ED6, HIGH); // = relais en position MSA collent
     delay(100); //100 ms de temps de collage des relais
     digitalWrite(out6, LOW); // je coupe le jus et
     ioport.digitalWrite(ED6, LOW);// replace le niveau logique du relais à zéro
+    return STO_VNA;
   }
   else
-    //STO_VNA=1
+
   {
+    STO_VNA = 1; // le soft est en configuration VNA
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
     ioport.digitalWrite(ED7, HIGH); //ED7 = relais en position VNA collent
     delay(100); //100 ms de temps de collage des relais
     digitalWrite(out6, LOW); // je coupe le jus et
     ioport.digitalWrite(ED7, LOW);// replace le niveau logique du relais à zéro
+    return STO_VNA;
   }
 }
 //_____________________________TRANS-REFL/FWD-REV écriture__________________________
@@ -574,7 +614,7 @@ byte Trans_write()
   if
   (trans_refl == LOW && fwd_reverse == LOW)
   {
-    STO_TRANS = 0; // transmission forward (S21)
+    STO_TRANS = 1; // transmission forward (S21)
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
     ioport.digitalWrite(ED0, HIGH);
     ioport.digitalWrite(ED2, HIGH);
@@ -588,7 +628,7 @@ byte Trans_write()
   else if
   (trans_refl == LOW && fwd_reverse == HIGH)
   {
-    STO_TRANS = 1; //transmission reverse (s12)
+    STO_TRANS = 2; //transmission reverse (s12)
     digitalWrite(out6, HIGH); // j'envoie du 28 V de partout
     ioport.digitalWrite(ED0, HIGH);
     ioport.digitalWrite(ED3, HIGH);
