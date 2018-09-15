@@ -45,7 +45,7 @@ int val_pot; // pour atténuateur
 unsigned int Resistance;
 byte att;
 unsigned int att_disp;
-
+// déclaration des fonctions et de leurs paramètres
 byte msa_read();
 byte msa_write();
 boolean STO_VNA;
@@ -66,7 +66,7 @@ byte ATT_write();
 byte STO_ATT;
 byte STO_ATT_OLD;
 
-// dessin des crochets
+// dessin des crochets sur afficheur lcd
 
 byte L1[8] = {
   B00000,
@@ -167,12 +167,11 @@ void setup()
   {
     ioport.pinMode(i, OUTPUT);
   }
-  // initialisation des variables
+  // initialisation des variables des fonctions
   STO_VNA = 0; //mode MSA
   STO_GHZ = 0; // mode 0-1 GHz
   STO_TRANS = 0; // mode msa par défaut, don't care pour sto_trans qui change dès que VNA
   STO_ATT = 0; // par défaut, ATT est à 0 dB
-
   STO_VNA_OLD = 0;
   STO_GHZ_OLD = 0;
   STO_TRANS_OLD = 0;
@@ -209,8 +208,7 @@ void loop()
 {
   lcd.backlight();
 
-  // effacement de la zone refl/fwd lorsque sur la position MSA
-  // faire un beep en cas de changement d'état
+  // todo : faire un beep en cas de changement d'état
 
   // initialisation des variables
   STO_VNA_OLD = STO_VNA;
@@ -316,8 +314,10 @@ byte msa_read()
   Si REFL  et REV alors S22
                             Affichage ligne 2 et 3
 
-  TRANSMISSION<--12--<      REFLECTION |--S11-->       LES DEUX LIGNES BLANCHES SI EN MODE MSA
-  REVERSE     <------<      FORWARD    |_______>
+  TRANSMISSION 2<------<      REFLECTION |_______>1
+  REVERSE      1<------<      FORWARD    |_______>1
+   TRANSMISSION 1<------<      REFLECTION |_______>2
+   FORWARD      2<------<      REVERSE     |_______>2
 
 */
 
@@ -344,9 +344,9 @@ byte Trans_read()
   {
     STO_TRANS = 1; // vna transmission forward (S21)
     lcd.setCursor(0, 2);
-    lcd.print("TRANSMISSION>--S21->");
+    lcd.print("TRANSMISSION  >---->");
     lcd.setCursor(0, 3);
-    lcd.print("FORWARD     >--DUT->");
+    lcd.print("FORWARD         S21 ");
     return STO_TRANS;
   }
 
@@ -355,9 +355,9 @@ byte Trans_read()
   {
     STO_TRANS = 2; //vna transmission reverse (s12)
     lcd.setCursor(0, 2);
-    lcd.print("TRANSMISSION<--S12-<");
+    lcd.print("TRANSMISSION  <----<");
     lcd.setCursor(0, 3);
-    lcd.print("REVERSE     <--DUT-<");
+    lcd.print("REVERSE         S12 ");
     return STO_TRANS;
   }
 
@@ -366,13 +366,15 @@ byte Trans_read()
   {
     STO_TRANS = 3; // vna reflexion forward (s11)
     lcd.setCursor(0, 2);
-    lcd.print("REFLECTION  <--S11-");
-    lcd.setCursor(19, 2);
+    lcd.print("REFLECTION <---     ");
+    lcd.setCursor(15, 2);
     lcd.write(byte(0));
     lcd.setCursor(0, 3);
-    lcd.print("FORWARD     <------");
-    lcd.setCursor(19, 3);
+    lcd.print("FORWARD    <---     ");
+    lcd.setCursor(15, 3);
     lcd.write(byte(1));
+    lcd.setCursor(17, 3);
+    lcd.print("S11");
     return STO_TRANS;
   }
 
@@ -381,12 +383,12 @@ byte Trans_read()
   {
     STO_TRANS = 4; // vna reflexion reverse (s22)
     lcd.setCursor(0, 2);
-    lcd.print("REFLECTION  --S22-->");
-    lcd.setCursor(12, 2);
+    lcd.print("REFLECTION     ---->");
+    lcd.setCursor(15, 2);
     lcd.write(byte(3));
     lcd.setCursor(0, 3);
-    lcd.print("REVERSE     ------->");
-    lcd.setCursor(12, 3);
+    lcd.print("REVERSE    S22 ---->");
+    lcd.setCursor(15, 3);
     lcd.write(byte(2));
     return STO_TRANS;
   }
