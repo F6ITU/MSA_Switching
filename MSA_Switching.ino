@@ -305,6 +305,11 @@ byte msa_read()
     lcd.print("                    ");
     lcd.setCursor(0, 3);
     lcd.print("                    ");
+    digitalWrite(out1, LOW);
+    digitalWrite(out2, LOW);
+    digitalWrite(out3, LOW);
+    digitalWrite(out4, LOW);// extinction des led vna de param S
+
     return STO_VNA;
   }
   else
@@ -370,8 +375,7 @@ byte Trans_read()
     digitalWrite(out1, HIGH);
     digitalWrite(out2, LOW);
     digitalWrite(out3, LOW);
-    digitalWrite(out4, LOW);
-    digitalWrite(out5, LOW);//allume la led de façade S21
+    digitalWrite(out4, LOW);//allume la led de façade S21
     return STO_TRANS;
   }
 
@@ -386,8 +390,7 @@ byte Trans_read()
     digitalWrite(out1, LOW);
     digitalWrite(out2, HIGH);
     digitalWrite(out3, LOW);
-    digitalWrite(out4, LOW);
-    digitalWrite(out5, LOW); //allume la led de façade S12
+    digitalWrite(out4, LOW);//allume la led de façade S12
     return STO_TRANS;
   }
 
