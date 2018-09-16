@@ -16,6 +16,11 @@ PCA9555 ioport(0x20);
 //les sorties de puissance (une seul utilisée pour l'instant)
 
 const char out6 = 11;
+const char out5 = 10;
+const char out4 = 9;
+const char out3 = 6;
+const char out2 = 5;
+const char out1 = 3;
 
 // les entrées
 const char in1 = A0;
@@ -130,9 +135,17 @@ void setup()
   lcd.clear();
 
   //MODULE P0WARDUINo gpio locales
-  pinMode(out6, OUTPUT);
+  pinMode(out6, OUTPUT); // déclanchement 28V
+  pinMode(out5, OUTPUT); // on/off
+  pinMode(out4, OUTPUT);// LED S21
+  pinMode(out3, OUTPUT);// LED S12
+  pinMode(out2, OUTPUT);// LED S11
+  pinMode(out1, OUTPUT);// LED S22
+
+
   //out6 va ouvrir un circuit 12V de mise en fonctionnement du step-up 28V, (via FET de puissance) et sera mis en service un peu avant
   //les déclanchements, puis désactivé immédiatement après pour éliminer tout risque de bruit de découpage durant la mesure
+  //les autres sorties sont de simples indicateurs LED d'activité (params S, marche/arret)
 
   // -----------------------définition des fonctions broches d'entrées
 
@@ -155,6 +168,8 @@ void setup()
 
   digitalWrite(out6, LOW);
   // vérifie que le courant est coupé coté relais 28V... on peut commencer
+  digitalWrite(out5, HIGH);
+  //Arduino On, Analyzer On, éventuellement après un délai de boot système qu'il faudra déterminer
 
   // - Initialisation atténuateur HP3321 à 0 dB
 
@@ -347,6 +362,11 @@ byte Trans_read()
     lcd.print("TRANSMISSION  >---->");
     lcd.setCursor(0, 3);
     lcd.print("FORWARD         S21 ");
+    digitalWrite (out1, HIGH);
+    digitalWrite (out2, LOW);
+    digitalWrite (out3, LOW);
+    digitalWrite (out4, LOW);
+    digitalWrite (out5, LOW);//allume la led de façade S21
     return STO_TRANS;
   }
 
@@ -358,6 +378,11 @@ byte Trans_read()
     lcd.print("TRANSMISSION  <----<");
     lcd.setCursor(0, 3);
     lcd.print("REVERSE         S12 ");
+    digitalWrite (out1, LOW);
+    digitalWrite (out2, HIGH);
+    digitalWrite (out3, LOW);
+    digitalWrite (out4, LOW);
+    digitalWrite (out5, LOW); //allume la led de façade S12
     return STO_TRANS;
   }
 
@@ -366,15 +391,17 @@ byte Trans_read()
   {
     STO_TRANS = 3; // vna reflexion forward (s11)
     lcd.setCursor(0, 2);
-    lcd.print("REFLECTION <---     ");
-    lcd.setCursor(15, 2);
+    lcd.print("REFLECTION     <---");
+    lcd.setCursor(19, 2);
     lcd.write(byte(0));
     lcd.setCursor(0, 3);
-    lcd.print("FORWARD    <---     ");
-    lcd.setCursor(15, 3);
+    lcd.print("FORWARD    S11 <---");
+    lcd.setCursor(19, 3);
     lcd.write(byte(1));
-    lcd.setCursor(17, 3);
-    lcd.print("S11");
+    digitalWrite (out1, LOW);
+    digitalWrite (out2, LOW);
+    digitalWrite (out3, HIGH);
+    digitalWrite (out4, LOW); //allume la led de façade S11
     return STO_TRANS;
   }
 
@@ -390,6 +417,10 @@ byte Trans_read()
     lcd.print("REVERSE    S22 ---->");
     lcd.setCursor(15, 3);
     lcd.write(byte(2));
+    digitalWrite (out1, LOW);
+    digitalWrite (out2, LOW);
+    digitalWrite (out3, LOW);
+    digitalWrite (out4, HIGH);//allume la led de façade S22
     return STO_TRANS;
   }
 
