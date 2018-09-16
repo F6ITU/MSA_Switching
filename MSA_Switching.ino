@@ -167,6 +167,11 @@ void setup()
   //A7 att
 
   digitalWrite(out6, LOW);
+  digitalWrite(out1, LOW);
+  digitalWrite(out2, LOW);
+  digitalWrite(out3, LOW);
+  digitalWrite(out4, LOW);
+  digitalWrite(out5, LOW);
   // vérifie que le courant est coupé coté relais 28V... on peut commencer
   digitalWrite(out5, HIGH);
   //Arduino On, Analyzer On, éventuellement après un délai de boot système qu'il faudra déterminer
@@ -362,11 +367,11 @@ byte Trans_read()
     lcd.print("TRANSMISSION  >---->");
     lcd.setCursor(0, 3);
     lcd.print("FORWARD         S21 ");
-    digitalWrite (out1, HIGH);
-    digitalWrite (out2, LOW);
-    digitalWrite (out3, LOW);
-    digitalWrite (out4, LOW);
-    digitalWrite (out5, LOW);//allume la led de façade S21
+    digitalWrite(out1, HIGH);
+    digitalWrite(out2, LOW);
+    digitalWrite(out3, LOW);
+    digitalWrite(out4, LOW);
+    digitalWrite(out5, LOW);//allume la led de façade S21
     return STO_TRANS;
   }
 
@@ -378,11 +383,11 @@ byte Trans_read()
     lcd.print("TRANSMISSION  <----<");
     lcd.setCursor(0, 3);
     lcd.print("REVERSE         S12 ");
-    digitalWrite (out1, LOW);
-    digitalWrite (out2, HIGH);
-    digitalWrite (out3, LOW);
-    digitalWrite (out4, LOW);
-    digitalWrite (out5, LOW); //allume la led de façade S12
+    digitalWrite(out1, LOW);
+    digitalWrite(out2, HIGH);
+    digitalWrite(out3, LOW);
+    digitalWrite(out4, LOW);
+    digitalWrite(out5, LOW); //allume la led de façade S12
     return STO_TRANS;
   }
 
@@ -398,10 +403,10 @@ byte Trans_read()
     lcd.print("FORWARD    S11 <---");
     lcd.setCursor(19, 3);
     lcd.write(byte(1));
-    digitalWrite (out1, LOW);
-    digitalWrite (out2, LOW);
-    digitalWrite (out3, HIGH);
-    digitalWrite (out4, LOW); //allume la led de façade S11
+    digitalWrite(out1, LOW);
+    digitalWrite(out2, LOW);
+    digitalWrite(out3, HIGH);
+    digitalWrite(out4, LOW); //allume la led de façade S11
     return STO_TRANS;
   }
 
@@ -417,10 +422,10 @@ byte Trans_read()
     lcd.print("REVERSE    S22 ---->");
     lcd.setCursor(15, 3);
     lcd.write(byte(2));
-    digitalWrite (out1, LOW);
-    digitalWrite (out2, LOW);
-    digitalWrite (out3, LOW);
-    digitalWrite (out4, HIGH);//allume la led de façade S22
+    digitalWrite(out1, LOW);
+    digitalWrite(out2, LOW);
+    digitalWrite(out3, LOW);
+    digitalWrite(out4, HIGH);//allume la led de façade S22
     return STO_TRANS;
   }
 
